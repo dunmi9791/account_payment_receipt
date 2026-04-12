@@ -12,242 +12,209 @@
                               reconciled_docs  (list of dicts)
     -->
 
+    <!--
+        Optimised for 80 mm thermal-receipt paper, portrait orientation.
+        All sections use a single-column flow; font sizes are kept small
+        so the content fits the ~74 mm printable width (80 mm – 3 mm margins).
+    -->
     <template id="report_payment_receipt_document">
-        <!--
-            Called once per payment (t-lang targets the partner language so that
-            translatable field values render in the partner's locale).
-        -->
         <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
         <t t-set="data" t-value="report_data[o.id]"/>
 
         <t t-call="web.external_layout">
-            <div class="page">
+            <div class="page" style="font-size: 10px; font-family: monospace; width: 100%;">
 
-                <!-- ══════════════════════════════════════════════
+                <!-- ══════════════════════════════
                      TITLE
-                ══════════════════════════════════════════════ -->
-                <div class="row mb-4">
-                    <div class="col-12 text-center">
-                        <h2 class="text-uppercase font-weight-bold"
-                            style="letter-spacing: 2px; border-bottom: 2px solid #333; padding-bottom: 6px;">
-                            Payment Receipt
-                        </h2>
+                ══════════════════════════════ -->
+                <div style="text-align: center; border-bottom: 1px solid #333;
+                            padding-bottom: 4px; margin-bottom: 6px;">
+                    <strong style="font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+                        Payment Receipt
+                    </strong>
+                </div>
+
+                <!-- ══════════════════════════════
+                     PAYMENT DETAILS
+                ══════════════════════════════ -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
+                    <tbody>
+                        <tr>
+                            <td style="width: 42%; font-weight: bold; padding: 1px 0;">Receipt No.</td>
+                            <td style="padding: 1px 0;"><span t-field="o.name"/></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Date</td>
+                            <td style="padding: 1px 0;"><span t-field="o.date"/></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: bold; padding: 1px 0;">Journal</td>
+                            <td style="padding: 1px 0;"><span t-field="o.journal_id.name"/></td>
+                        </tr>
+                        <tr t-if="o.payment_method_line_id">
+                            <td style="font-weight: bold; padding: 1px 0;">Method</td>
+                            <td style="padding: 1px 0;"><span t-field="o.payment_method_line_id.name"/></td>
+                        </tr>
+                        <tr t-if="o.ref">
+                            <td style="font-weight: bold; padding: 1px 0;">Memo</td>
+                            <td style="padding: 1px 0;"><span t-field="o.ref"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ══════════════════════════════
+                     PARTNER
+                ══════════════════════════════ -->
+                <div style="border-top: 1px dashed #aaa; padding-top: 4px; margin-bottom: 6px;">
+                    <span style="font-weight: bold;">
+                        <t t-if="o.payment_type == 'inbound'">Received from:</t>
+                        <t t-else="">Paid to:</t>
+                    </span>
+                    <div style="margin-top: 2px;">
+                        <strong t-field="o.partner_id.name"/>
+                        <t t-if="o.partner_id.street">
+                            <br/><span t-field="o.partner_id.street"/>
+                        </t>
+                        <t t-if="o.partner_id.street2">
+                            <br/><span t-field="o.partner_id.street2"/>
+                        </t>
+                        <t t-if="o.partner_id.city or o.partner_id.zip">
+                            <br/><span t-field="o.partner_id.zip"/>&#160;<span t-field="o.partner_id.city"/>
+                        </t>
+                        <t t-if="o.partner_id.state_id">
+                            <br/><span t-field="o.partner_id.state_id.name"/>
+                        </t>
+                        <t t-if="o.partner_id.country_id">
+                            <br/><span t-field="o.partner_id.country_id.name"/>
+                        </t>
+                        <t t-if="o.partner_id.vat">
+                            <br/>VAT: <span t-field="o.partner_id.vat"/>
+                        </t>
                     </div>
                 </div>
 
-                <!-- ══════════════════════════════════════════════
-                     HEADER – Payment ref  /  Partner info
-                ══════════════════════════════════════════════ -->
-                <div class="row mb-4">
-
-                    <!-- Left: Payment details -->
-                    <div class="col-6">
-                        <table class="table table-sm table-borderless" style="font-size: 13px;">
-                            <tbody>
-                                <tr>
-                                    <td class="font-weight-bold" style="width: 40%;">Receipt No.</td>
-                                    <td><span t-field="o.name"/></td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Date</td>
-                                    <td><span t-field="o.date"/></td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Journal</td>
-                                    <td><span t-field="o.journal_id.name"/></td>
-                                </tr>
-                                <tr t-if="o.payment_method_line_id">
-                                    <td class="font-weight-bold">Payment Method</td>
-                                    <td><span t-field="o.payment_method_line_id.name"/></td>
-                                </tr>
-                                <tr t-if="o.ref">
-                                    <td class="font-weight-bold">Reference / Memo</td>
-                                    <td><span t-field="o.ref"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Right: Partner address -->
-                    <div class="col-6 text-right">
-                        <div t-if="o.payment_type == 'inbound'">
-                            <strong>Received from:</strong>
-                        </div>
-                        <div t-else="">
-                            <strong>Paid to:</strong>
-                        </div>
-                        <address>
-                            <strong t-field="o.partner_id.name"/>
-                            <t t-if="o.partner_id.street">
-                                <br/><span t-field="o.partner_id.street"/>
-                            </t>
-                            <t t-if="o.partner_id.street2">
-                                <br/><span t-field="o.partner_id.street2"/>
-                            </t>
-                            <t t-if="o.partner_id.city or o.partner_id.zip">
-                                <br/>
-                                <span t-field="o.partner_id.zip"/>
-                                <span t-field="o.partner_id.city"/>
-                            </t>
-                            <t t-if="o.partner_id.state_id">
-                                <br/><span t-field="o.partner_id.state_id.name"/>
-                            </t>
-                            <t t-if="o.partner_id.country_id">
-                                <br/><span t-field="o.partner_id.country_id.name"/>
-                            </t>
-                            <t t-if="o.partner_id.vat">
-                                <br/>VAT: <span t-field="o.partner_id.vat"/>
-                            </t>
-                        </address>
-                    </div>
-
+                <!-- ══════════════════════════════
+                     BALANCE SUMMARY  (stacked rows)
+                ══════════════════════════════ -->
+                <div style="border: 1px solid #333; padding: 4px; margin-bottom: 6px;
+                            background-color: #f5f5f5;">
+                    <!-- Balance before -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 3px;">
+                        <tr>
+                            <td style="font-weight: bold;">Balance Before</td>
+                            <td style="text-align: right;">
+                                <t t-if="data['balance_before'] &gt; 0">
+                                    <span t-esc="'{:,.2f}'.format(data['balance_before'])"/>
+                                    &#160;<span t-field="o.currency_id.name"/>
+                                </t>
+                                <t t-else="">
+                                    <span style="color: green;">None</span>
+                                </t>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- Amount paid – highlighted -->
+                    <table style="width: 100%; border-collapse: collapse;
+                                  border-top: 1px solid #333; border-bottom: 1px solid #333;
+                                  margin-bottom: 3px; padding: 2px 0;">
+                        <tr>
+                            <td style="font-weight: bold; font-size: 11px;">Amount Paid</td>
+                            <td style="text-align: right; font-weight: bold;
+                                       font-size: 13px; color: #1a6bab;">
+                                <span t-field="o.amount"
+                                      t-options='{"widget": "monetary",
+                                                  "display_currency": o.currency_id}'/>
+                            </td>
+                        </tr>
+                    </table>
+                    <!-- Balance after -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="font-weight: bold;">Balance After</td>
+                            <td style="text-align: right;">
+                                <t t-if="data['balance_after'] &gt; 0">
+                                    <span t-esc="'{:,.2f}'.format(data['balance_after'])"/>
+                                    &#160;<span t-field="o.currency_id.name"/>
+                                </t>
+                                <t t-else="">
+                                    <span style="color: green; font-weight: bold;">Cleared</span>
+                                </t>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
 
-                <!-- ══════════════════════════════════════════════
-                     BALANCE SUMMARY BOX
-                ══════════════════════════════════════════════ -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <table class="table table-bordered"
-                               style="font-size: 14px; background-color: #f9f9f9;">
-                            <thead style="background-color: #e8e8e8;">
-                                <tr>
-                                    <th class="text-center">Outstanding Balance Before Payment</th>
-                                    <th class="text-center">Amount Paid</th>
-                                    <th class="text-center">New Balance After Payment</th>
+                <!-- ══════════════════════════════
+                     RECONCILED INVOICES / BILLS
+                     (3-column compact layout)
+                ══════════════════════════════ -->
+                <t t-if="data['reconciled_docs']">
+                    <div style="border-top: 1px dashed #aaa; padding-top: 4px; margin-bottom: 6px;">
+                        <div style="font-weight: bold; margin-bottom: 3px;">
+                            <t t-if="o.payment_type == 'inbound'">Invoices Settled</t>
+                            <t t-else="">Bills Settled</t>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #333;">
+                                    <th style="text-align: left; padding: 1px 0;">Doc / Date</th>
+                                    <th style="text-align: right; padding: 1px 2px;">Applied</th>
+                                    <th style="text-align: right; padding: 1px 0;">Remaining</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <!-- Outstanding balance before -->
-                                    <td class="text-center" style="font-size: 16px;">
-                                        <t t-if="data['balance_before'] &gt; 0">
-                                            <span t-esc="'{:,.2f}'.format(data['balance_before'])"/>
-                                            <span t-field="o.currency_id.name"
-                                                  style="margin-left:4px; font-size:12px; color:#555;"/>
-                                        </t>
-                                        <t t-else="">
-                                            <span style="color: green;">No outstanding balance</span>
-                                        </t>
-                                    </td>
-
-                                    <!-- Amount paid -->
-                                    <td class="text-center font-weight-bold"
-                                        style="font-size: 18px; color: #1a6bab;">
-                                        <span t-field="o.amount"
-                                              t-options='{"widget": "monetary",
-                                                          "display_currency": o.currency_id}'/>
-                                    </td>
-
-                                    <!-- New balance -->
-                                    <td class="text-center" style="font-size: 16px;">
-                                        <t t-if="data['balance_after'] &gt; 0">
-                                            <span t-esc="'{:,.2f}'.format(data['balance_after'])"/>
-                                            <span t-field="o.currency_id.name"
-                                                  style="margin-left:4px; font-size:12px; color:#555;"/>
-                                        </t>
-                                        <t t-else="">
-                                            <span style="color: green; font-weight: bold;">
-                                                Balance Cleared
-                                            </span>
-                                        </t>
-                                    </td>
-                                </tr>
+                                <t t-foreach="data['reconciled_docs']" t-as="rdoc">
+                                    <tr style="border-bottom: 1px dotted #ccc;">
+                                        <td style="padding: 1px 0;">
+                                            <span t-esc="rdoc['name']"/>
+                                            <br/><span style="color:#777;" t-esc="rdoc['date']"/>
+                                        </td>
+                                        <td style="text-align: right; padding: 1px 2px;
+                                                   color: #1a6bab; font-weight: bold;">
+                                            <span t-esc="'{:,.2f}'.format(rdoc['amount_applied'])"/>
+                                        </td>
+                                        <td style="text-align: right; padding: 1px 0;">
+                                            <t t-if="rdoc['amount_residual'] &gt; 0">
+                                                <span t-esc="'{:,.2f}'.format(rdoc['amount_residual'])"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span style="color: green;">Full</span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
                             </tbody>
+                            <tfoot>
+                                <tr style="font-weight: bold; border-top: 1px solid #333;">
+                                    <td style="padding: 1px 0;">Total Applied</td>
+                                    <td style="text-align: right; padding: 1px 2px; color: #1a6bab;">
+                                        <span t-esc="'{:,.2f}'.format(
+                                            sum(r['amount_applied'] for r in data['reconciled_docs'])
+                                        )"/>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
-                </div>
-
-                <!-- ══════════════════════════════════════════════
-                     RECONCILED INVOICES / BILLS
-                ══════════════════════════════════════════════ -->
-                <t t-if="data['reconciled_docs']">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h5 style="border-bottom: 1px solid #ccc; padding-bottom: 4px;">
-                                <t t-if="o.payment_type == 'inbound'">Invoices Settled by this Payment</t>
-                                <t t-else="">Bills Settled by this Payment</t>
-                            </h5>
-                            <table class="table table-sm table-striped" style="font-size: 12px;">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>Document</th>
-                                        <th class="text-right">Invoice Date</th>
-                                        <th class="text-right">Original Amount</th>
-                                        <th class="text-right">Amount Applied</th>
-                                        <th class="text-right">Remaining Balance</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="data['reconciled_docs']" t-as="rdoc">
-                                        <tr>
-                                            <td><span t-esc="rdoc['name']"/></td>
-                                            <td class="text-right">
-                                                <span t-esc="rdoc['date']"/>
-                                            </td>
-                                            <td class="text-right">
-                                                <span t-esc="'{:,.2f}'.format(rdoc['amount_total'])"/>
-                                                <small t-esc="rdoc['currency'].name" style="color:#888;"/>
-                                            </td>
-                                            <td class="text-right" style="color: #1a6bab; font-weight: bold;">
-                                                <span t-esc="'{:,.2f}'.format(rdoc['amount_applied'])"/>
-                                                <small t-esc="rdoc['currency'].name" style="color:#888;"/>
-                                            </td>
-                                            <td class="text-right">
-                                                <t t-if="rdoc['amount_residual'] &gt; 0">
-                                                    <span t-esc="'{:,.2f}'.format(rdoc['amount_residual'])"/>
-                                                    <small t-esc="rdoc['currency'].name" style="color:#888;"/>
-                                                </t>
-                                                <t t-else="">
-                                                    <span style="color: green;">Paid in full</span>
-                                                </t>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                                <!-- Totals row -->
-                                <tfoot>
-                                    <tr style="font-weight: bold; background-color: #f0f0f0;">
-                                        <td colspan="3" class="text-right">Total Applied:</td>
-                                        <td class="text-right" style="color: #1a6bab;">
-                                            <span t-esc="'{:,.2f}'.format(
-                                                sum(r['amount_applied'] for r in data['reconciled_docs'])
-                                            )"/>
-                                        </td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
                 </t>
 
-                <!-- ══════════════════════════════════════════════
-                     PAYMENT NOTE / MEMO (from the underlying journal entry)
-                ══════════════════════════════════════════════ -->
+                <!-- ══════════════════════════════
+                     NOTE / MEMO
+                ══════════════════════════════ -->
                 <t t-if="o.move_id and o.move_id.narration">
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <h5 style="border-bottom: 1px solid #ccc; padding-bottom: 4px;">Note</h5>
-                            <p t-field="o.move_id.narration"/>
-                        </div>
+                    <div style="border-top: 1px dashed #aaa; padding-top: 4px; margin-bottom: 6px;">
+                        <div style="font-weight: bold; margin-bottom: 2px;">Note</div>
+                        <p style="margin: 0;" t-field="o.move_id.narration"/>
                     </div>
                 </t>
 
-                <!-- ══════════════════════════════════════════════
-                     FOOTER / SIGNATURE
-                ══════════════════════════════════════════════ -->
-                <div class="row mt-5">
-                    <div class="col-6">
-                        <div style="border-top: 1px solid #333; margin-top: 40px; padding-top: 4px;">
-                            <small>Received by / Authorized Signature</small>
-                        </div>
-                    </div>
-                    <div class="col-6 text-right">
-                        <div style="border-top: 1px solid #333; margin-top: 40px; padding-top: 4px;">
-                            <small>Customer / Vendor Signature</small>
-                        </div>
-                    </div>
+                <!-- ══════════════════════════════
+                     SIGNATURE LINE
+                ══════════════════════════════ -->
+                <div style="border-top: 1px solid #333; margin-top: 16px; padding-top: 3px;
+                            text-align: center; font-size: 9px;">
+                    Authorized Signature
                 </div>
 
             </div><!-- /page -->
